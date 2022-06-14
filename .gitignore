@@ -1,2 +1,4 @@
 #custom
 config.py
+/__pycache__
+.gitignore
