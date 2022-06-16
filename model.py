@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from ovh_api.mongodb import MongoDB
+from .mongodb import MongoDB
 
 
 class Model(MongoDB):
