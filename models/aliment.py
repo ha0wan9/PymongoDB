@@ -1,9 +1,9 @@
 from pydantic import BaseModel
-from ovh_api.mongodb.models.config import *
+from ..config import *
 from ..mongodb import MongoDB
 
 model = {
-    'aliment_id': int,
+    'aliment_id': int
 }
 
 
