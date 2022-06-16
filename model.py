@@ -2,18 +2,26 @@ from pydantic import BaseModel
 from ovh_api.mongodb import MongoDB
 
 
-class Model(MongoDB, BaseModel):
+class Model(MongoDB):
+    class Data(BaseModel):
+        pass
     pass
 
 
-
-class Aliment(MongoDB, BaseModel):
+class Aliment(Model):
 
     def __init__(self):
-        BaseModel.__init__()
-        MongoDB.__init__(self, database_name='admin', collection_name='aliment')
+        super(Aliment, self).__init__(database_name='admin', collection_name='aliment')
         self.primary_key = 'id'
+        self.data = self.Data()
 
 if __name__ == '__main__':
-    aliment = Model()
-    aliment.__mro__()
+    aliment = Aliment()
+    print(aliment.data.dict())
+
+
+
+
+
+
+
