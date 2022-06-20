@@ -1,4 +1,4 @@
-from .config import URI
+from pymongodb.config import mongodb_settings
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
@@ -8,7 +8,7 @@ class MongoDB:
     def __init__(self, database_name: str = None, collection_name: str = None):
         # Establishing connection
         try:
-            uri = URI
+            uri = mongodb_settings.uri
             self.client = MongoClient(uri)
             print("[MongoDB]: MongoDB cluster is reachable")
             print(self.client)

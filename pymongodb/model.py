@@ -1,23 +1,20 @@
 from pydantic import BaseModel
-from .mongodb import MongoDB
+from pymongodb.mongodb import MongoDB
 
 
-class Model(MongoDB):
-    class Data(BaseModel):
-        pass
-    pass
+class ColModel(MongoDB):
+
+    def __init__(self, database_name: str, collection_name: str, data_model: BaseModel):
+        super(ColModel, self).__init__(database_name=database_name, collection_name=collection_name)
+        self._data_model = data_model
+
+    @property
+    def data(self) -> BaseModel:
+        return self._data_model
 
 
-class Aliment(Model):
 
-    def __init__(self):
-        super(Aliment, self).__init__(database_name='admin', collection_name='aliment')
-        self.primary_key = 'id'
-        self.data = self.Data()
 
-if __name__ == '__main__':
-    aliment = Aliment()
-    print(aliment.data.dict())
 
 
 
