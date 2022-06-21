@@ -1,4 +1,4 @@
-from pymongodb.config import mongodb_settings
+from .config import mongodb_settings
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
@@ -37,7 +37,7 @@ class MongoDB:
             self.collist = self.database.list_collection_names()
             if name not in self.collist:
                 self.collection = self.database[name]
-                print(f'[MongoDB]: Collection {name} created in {self.database}.')
+                print(f'[MongoDB]: Collection {name} created in {self.database.name}.')
             else:
                 self.collection = self.database[name]
                 print(f'[MongoDB]: Collection {name} exists.')
@@ -47,25 +47,25 @@ class MongoDB:
     def set_primary_key(self, key_name: str):
         self.primary_key = key_name
 
-    def query(self, key_name, key_value: str, unique: bool = False):
+    def query(self, key_name, key_value: str, one: bool = False):
         '''
 
         Args:
             key_name: key name to query
             key_value: key value to query
-            unique: query only
+            one: query only
 
         Returns:
             if unique: a dictionary of query result
             not unique: an iterable which contains all found documents
 
         '''
-        if unique:
+        if one:
             return self.collection.find_one({key_name: key_value})
         return self.collection.find({key_name: key_value})
 
     def primary_query(self, key_value, unique: bool = False):
-        return self.query(self.primary_key, key_value, unique=unique)
+        return self.query(self.primary_key, key_value, one=unique)
 
     def list_all(self):
         return self.collection.find({})
@@ -97,16 +97,16 @@ class MongoDB:
 
 
 if __name__ == "__main__":
-    tray_table = MongoDB(database_name='AI_Backend', collection_name='TrayTable')
+    table = MongoDB(database_name=mongodb_settings.db, collection_name='test')
     # element = {"name": "John", "address": "Highway 37"}
     # tray_table.insert(element)
-    data = tray_table.query('name', 'John', True)
+    data = table.query('name', 'John', True)
     print(data)
     # new_value = {"address": "18 rue des Roseaux"}
     #$ tray_table.update(data, new_value)
     data['name'] = 'Mary'
     data['address'] = '8, Avenue des Champs Elysee'
-    tray_table.insert(data)
+    table.insert(data)
 
 
 

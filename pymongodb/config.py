@@ -14,7 +14,8 @@ class MongoDBSettings(BaseSettings):
       col: Dict[str, str] = {
             'aliment': 'aliment',
             'sample': 'sample',
-            'tray': 'tray'
+            'tray': 'tray',
+            'test': 'test'
       }
 
       class Config(BaseSettings.Config):
