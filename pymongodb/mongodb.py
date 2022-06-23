@@ -1,6 +1,11 @@
-from .config import mongodb_settings
+"""
+A MongoDB interface for manipulating document data objects.
+"""
+from typing import List, overload, Any
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from .config import mongodb_settings
+from .errors import PymongoDBError, TypeValidationError
 
 
 class MongoDB:
@@ -19,7 +24,6 @@ class MongoDB:
         self.database = None
         self.collist = None
         self.collection = None
-        self.primary_key = None
 
         self.set_database(database_name)
         self.set_collection(collection_name)
@@ -44,10 +48,7 @@ class MongoDB:
         else:
             print(f'[MongoDB]: No database selected, please set a database.')
 
-    def set_primary_key(self, key_name: str):
-        self.primary_key = key_name
-
-    def query(self, key_name, key_value: str, one: bool = False):
+    def query(self, key_name: Any, key_value: str, one: bool = False):
         '''
 
         Args:
@@ -64,50 +65,61 @@ class MongoDB:
             return self.collection.find_one({key_name: key_value})
         return self.collection.find({key_name: key_value})
 
-    def primary_query(self, key_value, unique: bool = False):
-        return self.query(self.primary_key, key_value, one=unique)
+    def primary_query(self, key_value, one: bool = False):
+        return self.query('_id', key_value, one=one)
 
-    def list_all(self):
-        return self.collection.find({})
+    def list_all_elements(self):
+        return list(self.collection.find({}))
 
-    def insert(self, data: [dict, list]):
-        if type(data) is dict:
+    @overload
+    def insert(self, data: List[dict]):
+        ...
+
+    @overload
+    def insert(self, data: dict):
+        ...
+
+    def insert(self, data: [dict, List[dict]]):
+        if isinstance(data, dict):
             res = self.collection.insert_one(data)
             print(f'[MongoDB]: Document inserted with id {res.inserted_id}.')
-        elif type(data) is list:
+            return res
+        elif isinstance(data, list):
             res = self.collection.insert_many(data)
             print(f'[MongoDB]: {len(data)} documents inserted with ids {res.inserted_id}.')
+            return res
+        raise TypeValidationError(f'[MongoDB]: {type(data)} is not allowed.')
 
-    def update(self, query: dict, new_value: dict, batch: bool = False):
+
+    def update(self, query: dict, new_value: dict, with_regex: bool = False):
         new_value = {"$set": new_value}
-        if not batch:
+        if not with_regex:
             self.collection.update_one(query, new_value)
             print(f'[MongoDB]: Document updated successfully.')
         else:
             res = self.collection.update_many(query, new_value)
             print(f'[MongoDB]: {res.modified_count} documents updated successfully.')
 
-    def delete(self, query: dict, batch: bool = False):
-        if not batch:
-            self.collection.delete_one(query)
-            print(f'[MongoDB]: Document deleted successfully.')
-        else:
-            res = self.collection.delete_many(query)
-            print(f'[MongoDB]: {res.deleted_count} documents deleted successfully.')
+    @overload
+    def delete(self, query: List[dict], with_regex: bool = False):
+        ...
 
+    @overload
+    def delete(self, query: dict, with_regex: bool = False):
+        ...
 
-if __name__ == "__main__":
-    table = MongoDB(database_name=mongodb_settings.db, collection_name='test')
-    # element = {"name": "John", "address": "Highway 37"}
-    # tray_table.insert(element)
-    data = table.query('name', 'John', True)
-    print(data)
-    # new_value = {"address": "18 rue des Roseaux"}
-    #$ tray_table.update(data, new_value)
-    data['name'] = 'Mary'
-    data['address'] = '8, Avenue des Champs Elysee'
-    table.insert(data)
-
+    def delete(self, query: [dict, List[dict]], with_regex: bool = False):
+        if isinstance(query, list):
+            for q in query:
+                self.delete(q, with_regex=with_regex)
+        elif isinstance(query, dict):
+            if not with_regex:
+                self.collection.delete_one(query)
+                print(f"[MongoDB]: Document with id {query['_id']} deleted successfully.")
+            else:
+                res = self.collection.delete_many(query)
+                print(f'[MongoDB]: {res.deleted_count} documents deleted successfully.')
+        raise TypeValidationError(f'[MongoDB]: {type(query)} is not allowed.')
 
 
 

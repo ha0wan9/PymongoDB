@@ -16,5 +16,14 @@ class Test(AbstractCol[TestModel]):
         collection_name = mongodb_settings.col['test']
 
 
-test = Test()
+def test1():
+    test = Test()
+    test1 = {'_id': 2, 'a': 'A', 'b': 1}
+    test.insert(test1)
+
+    print(test.list_all_elements())
+
+def test2():
+    test = Test()
+    test.delete(test.list_all_elements())
 
