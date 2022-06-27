@@ -6,6 +6,7 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from .config import mongodb_settings
 from .errors import PymongoDBError, TypeValidationError
+from .utils import check_type
 
 
 class MongoDB:
@@ -48,7 +49,10 @@ class MongoDB:
         else:
             print(f'[MongoDB]: No database selected, please set a database.')
 
-    def query(self, key_name: Any, key_value: str, one: bool = False):
+    def create_index(self, index_name: str, unique: bool):
+        self.collection.create_index(index_name, unique=unique)
+
+    def query(self, key_name: Any, key_value: str, one: bool = False, **kwargs):
         '''
 
         Args:
@@ -62,8 +66,8 @@ class MongoDB:
 
         '''
         if one:
-            return self.collection.find_one({key_name: key_value})
-        return self.collection.find({key_name: key_value})
+            return self.collection.find_one({key_name: key_value}, **kwargs)
+        return self.collection.find({key_name: key_value}, **kwargs)
 
     def primary_query(self, key_value, one: bool = False):
         return self.query('_id', key_value, one=one)
@@ -72,32 +76,31 @@ class MongoDB:
         return list(self.collection.find({}))
 
     @overload
-    def insert(self, data: List[dict]):
+    def insert(self, data: List[dict], *args, **kwargs):
         ...
 
     @overload
-    def insert(self, data: dict):
+    def insert(self, data: dict, *args, **kwargs):
         ...
 
-    def insert(self, data: [dict, List[dict]]):
+    def insert(self, data: [dict, List[dict]], *args, **kwargs):
         if isinstance(data, dict):
-            res = self.collection.insert_one(data)
+            res = self.collection.insert_one(data, *args, **kwargs)
             print(f'[MongoDB]: Document inserted with id {res.inserted_id}.')
             return res
         elif isinstance(data, list):
-            res = self.collection.insert_many(data)
+            res = self.collection.insert_many(data, *args, **kwargs)
             print(f'[MongoDB]: {len(data)} documents inserted with ids {res.inserted_id}.')
             return res
         raise TypeValidationError(f'[MongoDB]: {type(data)} is not allowed.')
 
-
-    def update(self, query: dict, new_value: dict, with_regex: bool = False):
+    def update(self, query: dict, new_value: dict, with_regex: bool = False, **kwargs):
         new_value = {"$set": new_value}
         if not with_regex:
-            self.collection.update_one(query, new_value)
+            self.collection.update_one(query, new_value, **kwargs)
             print(f'[MongoDB]: Document updated successfully.')
         else:
-            res = self.collection.update_many(query, new_value)
+            res = self.collection.update_many(query, new_value, **kwargs)
             print(f'[MongoDB]: {res.modified_count} documents updated successfully.')
 
     @overload
@@ -109,17 +112,22 @@ class MongoDB:
         ...
 
     def delete(self, query: [dict, List[dict]], with_regex: bool = False):
-        if isinstance(query, list):
+        if check_type(query, 'List[dict]'):
+            if len(query) == 0:
+                print(f"[MongoDB]: The query list is empty, nothing to delete.")
+                return
             for q in query:
                 self.delete(q, with_regex=with_regex)
+            return
+        elif isinstance(query, list) and len(query) == 0:
+            print(f"[MongoDB]: The query list is empty, nothing to delete.")
+            return
         elif isinstance(query, dict):
             if not with_regex:
-                self.collection.delete_one(query)
-                print(f"[MongoDB]: Document with id {query['_id']} deleted successfully.")
+                res = self.collection.delete_one(query)
+                print(f"[MongoDB]: Document {res} deleted successfully.")
             else:
                 res = self.collection.delete_many(query)
                 print(f'[MongoDB]: {res.deleted_count} documents deleted successfully.')
+            return
         raise TypeValidationError(f'[MongoDB]: {type(query)} is not allowed.')
-
-
-

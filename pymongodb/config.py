@@ -11,11 +11,12 @@ class MongoDBSettings(BaseSettings):
                   "@node1-581706eeb81da997.database.cloud.ovh.net/" \
                   "admin?replicaSet=replicaset&tls=true"
       db: str = "admin"
-      col: Dict[str, str] = {
-            'aliment': 'aliment',
-            'sample': 'sample',
-            'tray': 'tray',
-            'test': 'test'
+      col: Dict[str, Dict[str, str]] = {
+            'aliment': {'name': 'aliment', 'primary key': 'aliment_id'},
+            'aliment_cat': {'name': 'aliment_cat', 'primary key': 'aliment_cat_id'},
+            'sample': {'name': 'sample', 'primary key': 'sample_id'},
+            'tray': {'name': 'sample', 'primary key': 'image_ref'},
+            'test': {'name': 'test', 'primary key': 'id'},
       }
 
       class Config(BaseSettings.Config):

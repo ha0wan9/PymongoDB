@@ -18,8 +18,9 @@ class Test(AbstractCol[TestModel]):
 
 def test1():
     test = Test()
-    test1 = {'_id': 2, 'a': 'A', 'b': 1}
-    test.insert(test1)
+    test1 = {'_id': 3, 'a': 'A', 'b': 1}
+    test1 = test.to_model(test1)
+    test.save(test1)
 
     print(test.list_all_elements())
 
