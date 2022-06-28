@@ -1,4 +1,5 @@
 from ..pymongodb import DefaultCol, mongodb_settings
+from typing import Optional
 from pydantic import BaseModel
 
 __all__ = ["sample_table"]
@@ -8,14 +9,14 @@ class SampleModel(BaseModel):
 
     sample_id: str
     aliment_id: int
-    from_isahit: bool
+    from_isahit: Optional[bool]
     from_supervisely: bool
     image_ref: str
     mask_ref: str
-    observed_thick: float
+    observed_thick: Optional[float]
     restaurant_name: str
-    surface: float
-    volume: float
+    surface: Optional[float]
+    volume: Optional[float]
 
 
 class SampleCol(DefaultCol[SampleModel]):

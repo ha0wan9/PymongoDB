@@ -1,4 +1,5 @@
 from ..pymongodb import DefaultCol, mongodb_settings
+from typing import Union, Optional
 from datetime import date
 from pydantic import BaseModel
 
@@ -8,9 +9,9 @@ __all__ = ["tray_table"]
 class TrayModel(BaseModel):
 
     image_ref: str
-    created_at: date
-    mask_ref: str
-    pfm_ref: str
+    created_at: Union[date, str]
+    mask_ref: Optional[str]
+    pfm_ref: Optional[str]
     restaurant_name: str
     status: str
 

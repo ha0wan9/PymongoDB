@@ -3,7 +3,8 @@ from .config import mongodb_settings
 from .errors import *
 from .utils import check_type
 from typing import List, Type, TypeVar, Generic, overload
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+from warnings import warn
 
 
 _T = TypeVar('_T', bound=BaseModel)
@@ -71,14 +72,21 @@ class DefaultCol(AbstractCol[_T]):
     def to_model_custom(output_type: Type[_OT], data: dict) -> _OT:
         if '_id' in data.keys():
             data.pop('_id')
+        if '__v' in data.keys():
+            data.pop('__v')
+        #try:
         return output_type.parse_obj(data)
+        # except ValidationError as e:
+        #    warn(f'{e}: validation error at data {data}.')
+
 
     def to_model(self, data: [dict, List[dict]]) -> _T:
-        if check_type(data, 'List_dict'):
-            return [self.to_model(data_point) for data_point in data]
         return self.to_model_custom(self.__document_class, data)
 
-    def get(self, key_value, key: str = None, one: bool = False):
+    def get(self, key_value: str = None, key: str = None, one: bool = False):
+        if not key_value:
+            result = self.list_all_elements()
+            return [self.to_model(res) for res in result]
         if not key:
             key = self.primary_key
             result = self.query(key, key_value, one=True)
@@ -86,6 +94,8 @@ class DefaultCol(AbstractCol[_T]):
             result = self.query(key, key_value, one=one)
         if not result:
             raise DataNotFoundError(f'[MongoDB] Data with {key} = {key_value} doesnt exist.')
+        # val = list(result)
+        # print(val)
         if isinstance(result, dict):
             return self.to_model(result)
         return [self.to_model(res) for res in result]

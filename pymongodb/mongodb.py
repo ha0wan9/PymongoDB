@@ -49,8 +49,20 @@ class MongoDB:
         else:
             print(f'[MongoDB]: No database selected, please set a database.')
 
-    def create_index(self, index_name: str, unique: bool):
-        self.collection.create_index(index_name, unique=unique)
+    def create_index(self, keys: str, **kwargs) -> str:
+        '''
+
+        Args:
+            keys: Union[str, Sequence[Tuple[str, Union[int, str, Mapping[str, Any]]]]]
+                - single key in str or list of keys with [(key, direction(ASCENDING,
+                  DESCENDING, GEO2D, GEOSPHERE, HASHED, TEXT))]
+            **kwargs:
+                - unique: bool = False, set key(s) as primary key or not.
+
+        Returns:
+
+        '''
+        return self.collection.create_index(keys, **kwargs)
 
     def query(self, key_name: Any, key_value: str, one: bool = False, **kwargs):
         '''

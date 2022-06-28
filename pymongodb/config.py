@@ -15,7 +15,7 @@ class MongoDBSettings(BaseSettings):
             'aliment': {'name': 'aliment', 'primary key': 'aliment_id'},
             'aliment_cat': {'name': 'aliment_cat', 'primary key': 'aliment_cat_id'},
             'sample': {'name': 'sample', 'primary key': 'sample_id'},
-            'tray': {'name': 'sample', 'primary key': 'image_ref'},
+            'tray': {'name': 'tray', 'primary key': 'image_ref'},
             'test': {'name': 'test', 'primary key': 'id'},
       }
 
