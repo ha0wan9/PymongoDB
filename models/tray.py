@@ -1,12 +1,11 @@
-from ..pymongodb import DefaultCol, mongodb_settings
+from ..pymongodb import DefaultCol, mongodb_settings, AbstractModel
 from typing import Union, Optional
 from datetime import date
-from pydantic import BaseModel
 
 __all__ = ["tray_table"]
 
 
-class TrayModel(BaseModel):
+class TrayModel(AbstractModel):
 
     image_ref: str
     created_at: Union[date, str]
@@ -24,4 +23,4 @@ class TrayCol(DefaultCol[TrayModel]):
         primary_key = mongodb_settings.col['tray']['primary key']
 
 
-tray_table = TrayCol()
+tray_table = TrayCol(TrayModel)

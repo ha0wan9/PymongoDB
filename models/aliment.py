@@ -1,21 +1,22 @@
-from ..pymongodb import DefaultCol, mongodb_settings
+from ..pymongodb import DefaultCol, mongodb_settings, AbstractModel
 from pydantic import BaseModel
 
 __all__ = ["aliment_table"]
 
 
-class AlimentModel(BaseModel):
+class AlimentModel(AbstractModel):
 
-    aliment_id: int
-    aliment_cat_id: int
-    aliment_cat_name: str
-    aliment_name: str
-    cat_eMin: float
-    cat_eMoy: float
-    cat_volumic_mass: float
-    eMin: int
-    eMoy: int
-    volumic_mass: float
+    aliment_id: int = 0
+    aliment_cat_id: int = 0
+    aliment_cat_name: str = 'aliment_cat_name'.upper()
+    aliment_name: str = 'aliment_name'.upper()
+    cat_eMin: float = 0.0
+    cat_eMoy: float = 0.0
+    cat_volumic_mass: float = 0.0
+    eMin: int = 0
+    eMoy: int = 0
+    volumic_mass: float = 0.0
+
 
 
 class AlimentCol(DefaultCol[AlimentModel]):
@@ -26,4 +27,4 @@ class AlimentCol(DefaultCol[AlimentModel]):
         primary_key = mongodb_settings.col['aliment']['primary key']
 
 
-aliment_table = AlimentCol()
+aliment_table = AlimentCol(AlimentModel)

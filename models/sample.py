@@ -1,18 +1,18 @@
-from ..pymongodb import DefaultCol, mongodb_settings
+from ..pymongodb import DefaultCol, mongodb_settings, AbstractModel
 from typing import Optional
 from pydantic import BaseModel
 
 __all__ = ["sample_table"]
 
 
-class SampleModel(BaseModel):
+class SampleModel(AbstractModel):
 
     sample_id: str
     aliment_id: int
     from_isahit: Optional[bool]
-    from_supervisely: bool
+    from_supervisely: Optional[bool]
     image_ref: str
-    mask_ref: str
+    mask_ref: Optional[str]
     observed_thick: Optional[float]
     restaurant_name: str
     surface: Optional[float]
@@ -27,4 +27,4 @@ class SampleCol(DefaultCol[SampleModel]):
         primary_key = mongodb_settings.col['sample']['primary key']
 
 
-sample_table = SampleCol()
+sample_table = SampleCol(SampleModel)

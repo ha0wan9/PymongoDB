@@ -2,13 +2,27 @@ from .mongodb import MongoDB
 from .config import mongodb_settings
 from .errors import *
 from .utils import check_type
-from typing import List, Type, TypeVar, Generic, overload
+from typing import List, Type, TypeVar, Generic, Union, Any, overload
 from pydantic import BaseModel, ValidationError
 from warnings import warn
 
 
-_T = TypeVar('_T', bound=BaseModel)
+__all__ = ['AbstractModel', 'AbstractCol', 'DefaultCol']
+
+
+class AbstractModel(BaseModel):
+
+    _T = TypeVar('_T', bound=BaseModel)
+
+    @classmethod
+    def __create_one(cls, key, key_value: Any) -> _T:
+        return cls().__setattr__(key, key_value)
+
+
+_T = TypeVar('_T', bound=AbstractModel)
 _OT = TypeVar('_OT', bound=BaseModel)
+primary_T = TypeVar('primary_T')
+
 
 class AbstractCol(MongoDB, Generic[_T]):
 
@@ -48,12 +62,13 @@ class DefaultCol(AbstractCol[_T]):
     class Meta:
         database_name: str
         collection_name: str
-        primary_key: str
+        primary_key: Any
 
-    def __init__(self):
+    def __init__(self, model: _T):
         super().__init__()
         self.__document_class = self.__orig_bases__[0].__args__[0]
         self.create_index(self.primary_key, unique=True)
+        self.model = model
 
     # Built in test collection
     @classmethod
@@ -79,11 +94,15 @@ class DefaultCol(AbstractCol[_T]):
         # except ValidationError as e:
         #    warn(f'{e}: validation error at data {data}.')
 
-
     def to_model(self, data: [dict, List[dict]]) -> _T:
         return self.to_model_custom(self.__document_class, data)
 
-    def get(self, key_value: str = None, key: str = None, one: bool = False):
+    def create(self, key_value: Any):
+        new_data = self.model()
+        new_data.__setattr__(self.primary_key, key_value)
+        return new_data
+
+    def get(self, key_value: primary_T = None, key: str = None, one: bool = False) -> Union[_T, List[_T]]:
         if not key_value:
             result = self.list_all_elements()
             return [self.to_model(res) for res in result]
@@ -113,9 +132,8 @@ class DefaultCol(AbstractCol[_T]):
         return super().delete(dict(query), with_regex=with_regex)
 
 
-
-
 class DefaultIdCol(AbstractCol[_T]):
+    # TODO: Finish the implementation of the class
 
     class Meta:
         database_name: str
