@@ -7,9 +7,7 @@ __all__ = 'mongodb_settings'
 
 class MongoDBSettings(BaseSettings):
 
-      uri: str = "mongodb://haoran:r2SRX3l8KQap7TzJPx6s" \
-                  "@node1-581706eeb81da997.database.cloud.ovh.net/" \
-                  "admin?replicaSet=replicaset&tls=true"
+      uri: str
       db: str = "admin"
       col: Dict[str, Dict[str, str]] = {
             'aliment': {'name': 'aliment', 'primary key': 'aliment_id'},
