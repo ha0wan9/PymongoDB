@@ -1,3 +1,3 @@
-pydantic
-pymongo
-mypy
+pydantic==1.9.2
+pymongo==4.1.1
+mypy==0.971

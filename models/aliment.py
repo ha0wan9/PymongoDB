@@ -1,7 +1,7 @@
-from ..pymongodb import DefaultCol, mongodb_settings, AbstractModel
-from pydantic import BaseModel
+from ovh_api.PymongoDB.pymongodb import DefaultCol, AbstractModel
+from ovh_api.PymongoDB.configs import AWSConfig, OVHConfig
 
-__all__ = ["aliment_table"]
+__all__ = ["aliment_table_aws", "aliment_table_ovh"]
 
 
 class AlimentModel(AbstractModel):
@@ -18,13 +18,26 @@ class AlimentModel(AbstractModel):
     volumic_mass: float = 0.0
 
 
-
-class AlimentCol(DefaultCol[AlimentModel]):
+class AlimentColAWS(DefaultCol[AlimentModel]):
 
     class Meta:
-        database_name = mongodb_settings.db
-        collection_name = mongodb_settings.col['aliment']['name']
-        primary_key = mongodb_settings.col['aliment']['primary key']
+        mongodb_settings = AWSConfig()
+        identifier = mongodb_settings.URI
+        database_name = mongodb_settings.DB
+        collection_name = mongodb_settings.COL['aliment']['name']
+        primary_key = mongodb_settings.COL['aliment']['primary key']
 
 
-aliment_table = AlimentCol(AlimentModel)
+class AlimentColOVH(DefaultCol[AlimentModel]):
+
+    class Meta:
+        mongodb_settings = OVHConfig()
+        identifier = mongodb_settings.URI
+        database_name = mongodb_settings.DB
+        collection_name = mongodb_settings.COL['aliment']['name']
+        primary_key = mongodb_settings.COL['aliment']['primary key']
+
+
+
+aliment_table_aws = AlimentColAWS(AlimentModel)
+aliment_table_ovh = AlimentColOVH(AlimentModel)

@@ -9,8 +9,10 @@ class TypeValidationError(PymongoDBError):
 class KeyNotFoundError(PymongoDBError):
     pass
 
+
 class KeyNotDefinedError(PymongoDBError):
     pass
+
 
 class DataNotFoundError(PymongoDBError):
     pass

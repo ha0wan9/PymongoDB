@@ -1,21 +1,23 @@
 """
 A MongoDB interface for manipulating document data objects.
 """
-from typing import List, overload, Any
+import typing
+
+from typing import List, overload, Any, Generic, TypeVar
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
-from .config import mongodb_settings
+from pydantic import BaseSettings
 from .errors import PymongoDBError, TypeValidationError
 from .utils import check_type
 
 
 class MongoDB:
 
-    def __init__(self, database_name: str = None, collection_name: str = None):
+    def __init__(self, database_name: str = None, collection_name: str = None,
+                 identifier: str = None):
         # Establishing connection
         try:
-            uri = mongodb_settings.uri
-            self.client = MongoClient(uri)
+            self.client = MongoClient(identifier)
             print("[MongoDB]: MongoDB cluster is reachable")
             print(self.client)
         except ConnectionFailure as e:
@@ -35,7 +37,7 @@ class MongoDB:
             print(f'[MongoDB]: Database {name} created.')
         else:
             self.database = self.client[name]
-            print(f'[MongoDB]: Database {name} exists.')
+            # print(f'[MongoDB]: Database {name} exists.')
 
     def set_collection(self, name: str):
         if self.database is not None:
@@ -45,7 +47,7 @@ class MongoDB:
                 print(f'[MongoDB]: Collection {name} created in {self.database.name}.')
             else:
                 self.collection = self.database[name]
-                print(f'[MongoDB]: Collection {name} exists.')
+                # print(f'[MongoDB]: Collection {name} exists.')
         else:
             print(f'[MongoDB]: No database selected, please set a database.')
 
@@ -64,7 +66,7 @@ class MongoDB:
         '''
         return self.collection.create_index(keys, **kwargs)
 
-    def query(self, key_name: Any, key_value: str, one: bool = False, **kwargs):
+    def query(self, key_name: Any, query_value: str, one: bool = False, **kwargs):
         '''
 
         Args:
@@ -78,8 +80,8 @@ class MongoDB:
 
         '''
         if one:
-            return self.collection.find_one({key_name: key_value}, **kwargs)
-        return self.collection.find({key_name: key_value}, **kwargs)
+            return self.collection.find_one({key_name: query_value}, **kwargs)
+        return self.collection.find({key_name: query_value}, **kwargs)
 
     def primary_query(self, key_value, one: bool = False):
         return self.query('_id', key_value, one=one)
@@ -110,7 +112,6 @@ class MongoDB:
         new_value = {"$set": new_value}
         if not with_regex:
             self.collection.update_one(query, new_value, **kwargs)
-            print(f'[MongoDB]: Document updated successfully.')
         else:
             res = self.collection.update_many(query, new_value, **kwargs)
             print(f'[MongoDB]: {res.modified_count} documents updated successfully.')
@@ -137,9 +138,14 @@ class MongoDB:
         elif isinstance(query, dict):
             if not with_regex:
                 res = self.collection.delete_one(query)
-                print(f"[MongoDB]: Document {res} deleted successfully.")
+                print(f"[MongoDB]: Document {query.keys()[0]} deleted successfully.")
             else:
                 res = self.collection.delete_many(query)
                 print(f'[MongoDB]: {res.deleted_count} documents deleted successfully.')
             return
         raise TypeValidationError(f'[MongoDB]: {type(query)} is not allowed.')
+
+
+def test_mongodb_conn():
+    mongodb = MongoDB(database_name='admin', collection_name='aliment', identifier='mongodb://kikleodb:GYqv9LdZo5Gqq5FN@35.181.59.37:27017/')
+    print(mongodb)

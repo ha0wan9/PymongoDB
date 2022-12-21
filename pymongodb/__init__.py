@@ -1,3 +1,3 @@
 from .mongodb import MongoDB
-from .config import mongodb_settings
+from .config import *
 from .model import *

@@ -1,3 +1,8 @@
+"""
+High-level Pythonic Object oriented MongoDB interface.
+"""
+import warnings
+
 from .mongodb import MongoDB
 from .config import mongodb_settings
 from .errors import *
@@ -12,11 +17,9 @@ __all__ = ['AbstractModel', 'AbstractCol', 'DefaultCol']
 
 class AbstractModel(BaseModel):
 
-    _T = TypeVar('_T', bound=BaseModel)
-
     @classmethod
-    def __create_one(cls, key, key_value: Any) -> _T:
-        return cls().__setattr__(key, key_value)
+    def __repr__(cls):
+        return cls.__class__.__name__
 
 
 _T = TypeVar('_T', bound=AbstractModel)
@@ -27,14 +30,17 @@ primary_T = TypeVar('primary_T')
 class AbstractCol(MongoDB, Generic[_T]):
 
     class Meta:
+        identifier: str
         database_name: str
         collection_name: str
         primary_key: str
 
     def __init__(self):
-        super().__init__(database_name=self.Meta.database_name,
+        super().__init__(identifier=self.Meta.identifier,
+                         database_name=self.Meta.database_name,
                          collection_name=self.Meta.collection_name)
         self.__document_class = self.__orig_bases__[0].__args__[0]
+        # self.__model = self.__orig_bases__[0]
         self.primary_key = None
         self.__validate()
 
@@ -60,6 +66,7 @@ class AbstractCol(MongoDB, Generic[_T]):
 class DefaultCol(AbstractCol[_T]):
 
     class Meta:
+        identifier: str
         database_name: str
         collection_name: str
         primary_key: Any
@@ -68,7 +75,7 @@ class DefaultCol(AbstractCol[_T]):
         super().__init__()
         self.__document_class = self.__orig_bases__[0].__args__[0]
         self.create_index(self.primary_key, unique=True)
-        self.model = model
+        self.__model = model
 
     # Built in test collection
     @classmethod
@@ -98,38 +105,60 @@ class DefaultCol(AbstractCol[_T]):
         return self.to_model_custom(self.__document_class, data)
 
     def create(self, key_value: Any):
-        new_data = self.model()
+        new_data = self.__model()
         new_data.__setattr__(self.primary_key, key_value)
         return new_data
 
-    def get(self, key_value: primary_T = None, key: str = None, one: bool = False) -> Union[_T, List[_T]]:
-        if not key_value:
+    def get(self, query_value: primary_T = None, key: str = None, one: bool = True) -> Union[_T, List[_T]]:
+        if not query_value:
             result = self.list_all_elements()
             return [self.to_model(res) for res in result]
         if not key:
             key = self.primary_key
-            result = self.query(key, key_value, one=True)
+            result = self.query(key, query_value, one=one)
         else:
-            result = self.query(key, key_value, one=one)
+            result = self.query(key, query_value, one=one)
         if not result:
-            raise DataNotFoundError(f'[MongoDB] Data with {key} = {key_value} doesnt exist.')
+            raise DataNotFoundError(f'[MongoDB] Data with {key} = {query_value} doesnt exist.')
         # val = list(result)
         # print(val)
         if isinstance(result, dict):
             return self.to_model(result)
         return [self.to_model(res) for res in result]
 
-    def save(self, model: _T):
+    def save(self, data: _T, forced: bool = False):
         # Convert input data to document
-        document = dict(model)
+        document = dict(data)
         if '_id' in document.keys():
             document.pop('_id')
-        result = self.update({self.primary_key: document[self.primary_key]},
-                             document, upsert=True)
+        result = super().update({self.primary_key: document[self.primary_key]}, document, upsert=forced)
+        print(f'[MongoDB]: Document {self.primary_key} = {document[self.primary_key]} '
+              f'from {repr(self.__model)} saved successfully.')
         return result
 
-    def delete(self, query: _T, with_regex: bool = False):
-        return super().delete(dict(query), with_regex=with_regex)
+    def add(self, data: Union[_T, List[_T]]):
+        # Convert input data to document
+        if isinstance(data, list):
+            data = [dict(document).pop('_id') for document in data if '_id' in document.keys()]
+        else:
+            document = dict(data)
+            if '_id' in document.keys():
+                document.pop('_id')
+        result = super().insert(document)
+        return result
+
+    # def delete(self, query: _T, with_regex: bool = False):
+    #    if not isinstance(query, dict):
+    #        query = dict(query)
+    #    return super().delete(query, with_regex=with_regex)
+
+    def delete(self, query_value: primary_T = None, key: str = None, with_regex: bool = False):
+        if not query_value:
+            warnings.warn("This action will delete all data in the collection, it is disabled")
+        if not key:
+            key = self.primary_key
+        super().delete({key: query_value}, with_regex=with_regex)
+
 
 
 class DefaultIdCol(AbstractCol[_T]):
@@ -147,7 +176,7 @@ class DefaultIdCol(AbstractCol[_T]):
     @classmethod
     def test_col(cls) -> _OT:
         cls.Meta.database_name = mongodb_settings.db
-        cls.Meta.collection_name = mongodb_settings.col['test']
+        cls.Meta.collection_name = mongodb_settings.col['test']['name']
 
         class TestModel(BaseModel):
             id: int
