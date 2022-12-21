@@ -11,10 +11,8 @@ class Col(BaseModel):
 
 class MongoDBSettings(BaseSettings):
 
-      URI: str = "mongodb://haoran:r2SRX3l8KQap7TzJPx6s" \
-                  "@node1-581706eeb81da997.database.cloud.ovh.net/" \
-                  "admin?replicaSet=replicaset&tls=true"
-      DB: str = "admin"
+      URI: str = ENV
+      DB: str = "mongodb://username:password@hostnameOrReplicaset/?tls=True"
       COL: Dict[str, Dict[str, str]] = {
             'aliment': {'name': 'aliment', 'primary key': 'aliment_id'},
             'aliment_cat': {'name': 'aliment_cat', 'primary key': 'aliment_cat_id'},
