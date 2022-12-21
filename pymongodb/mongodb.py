@@ -144,8 +144,3 @@ class MongoDB:
                 print(f'[MongoDB]: {res.deleted_count} documents deleted successfully.')
             return
         raise TypeValidationError(f'[MongoDB]: {type(query)} is not allowed.')
-
-
-def test_mongodb_conn():
-    mongodb = MongoDB(database_name='admin', collection_name='aliment', identifier='mongodb://kikleodb:GYqv9LdZo5Gqq5FN@35.181.59.37:27017/')
-    print(mongodb)
